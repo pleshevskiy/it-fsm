@@ -1,0 +1,44 @@
+{
+  "name": "it-fsm",
+  "version": "1.0.2",
+  "description": "Simple finite state machine for nodejs",
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "readme": "README.md",
+  "files": [
+    "src",
+    "!*.spec.ts",
+    "!*.ts",
+    "*.d.ts"
+  ],
+  "scripts": {
+    "test": "jest",
+    "prepublishOnly": "tsc",
+    "report-coverage": "cat coverage/lcov.info | coveralls"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/icetemple/npm-it-fsm.git"
+  },
+  "keywords": [
+    "fsm",
+    "finite",
+    "state",
+    "machine",
+    "icetemple",
+    "it"
+  ],
+  "author": "Dmitriy Pleshevskiy <dmitriy@ideascup.me>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/icetemple/npm-it-fsm/issues"
+  },
+  "homepage": "https://github.com/icetemple/npm-it-fsm#readme",
+  "devDependencies": {
+    "@types/jest": "^24.0.15",
+    "coveralls": "^3.0.5",
+    "jest": "^24.8.0",
+    "ts-jest": "^24.0.2",
+    "typescript": "^3.5.3"
+  }
+}
