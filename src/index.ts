@@ -1,56 +1,77 @@
 
 
 export type Payload = Record<string, any>
-export type SystemEvent = (event: string, fromState: string, toState: string,
+export type StateType = string | number
+export type ActionConfigMap = Record<string, StateType | IActionConfig>
+export type ActionEvent = (event: string, fromState: string, toState: string,
                            payload: Payload) => Promise<any>
 
 
-export interface StateEvents {
-    [key: string]: string
+export interface IConfig {
+    [key: string]: ActionEvent | ActionConfigMap
+    onEnter: ActionEvent
+    onLeave: ActionEvent
 }
 
+export interface IActionConfig {
+    state: StateType
+    onBeforeChange?: ActionEvent
+    onChange?: ActionEvent
+}
 
 
 export class StateMachine {
     [key: string]: any;
 
     private _currentState: string;
-    private _onEnter: SystemEvent;
+    private _onEnter: ActionEvent;
+    private _onLeave: ActionEvent;
     private _eventsByState: Record<string, Record<string, (payload: Payload) => any>> = {};
     private _statesByState: Record<string, string[]> = {};
 
-    constructor(initial: string, config: Record<string, StateEvents | SystemEvent>) {
-        this._currentState = initial;
+    constructor(initial: StateType, config: IConfig) {
+        this._currentState = initial.toString();
 
         for (let fromState in config) {
-            if (fromState === 'onEnter') {
-                this._onEnter = config.onEnter as SystemEvent;
+            if (['onEnter', 'onLeave'].includes(fromState)) {
+                this._onEnter = config.onEnter;
                 continue
             }
 
             this._statesByState[fromState] = [];
 
-            let events = config[fromState] as StateEvents;
-            for (let eventName in events) {
-                let toState: string = events[eventName];
-                this._statesByState[fromState].push(toState);
-                this._initChangeState(eventName, fromState, toState)
+            let actions = config[fromState] as ActionConfigMap;
+            for (let actionName in actions) {
+                let action = actions[actionName];
+                let actionConfig: IActionConfig = action.constructor === Object ?
+                    action as IActionConfig
+                    : { state: action as StateType };
+
+                this._statesByState[fromState].push(actionConfig.state.toString());
+                this._initChangeState(actionName, fromState, actionConfig.state.toString(), actionConfig);
             }
         }
     }
 
-    private _initChangeState(eventName: string, fromState: string, toState: string): void {
+    private _initChangeState(eventName: string, fromState: string, toState: string, actionConfig: IActionConfig): void {
         if (!this._eventsByState[fromState]) {
             this._eventsByState[fromState] = {};
         }
 
+        const { onBeforeChange, onChange } = actionConfig;
+
         this._eventsByState[fromState][eventName] = async (payload: Payload = {}) => {
+            console.log(this._currentState, typeof this._currentState, fromState, typeof fromState);
             if (this._currentState !== fromState) {
                 return;
             }
 
-            await this._onEnter(eventName, fromState, toState, payload);
+            this._onEnter && await this._onEnter(eventName, fromState, toState, payload);
+            onBeforeChange && await onBeforeChange(eventName, fromState, toState, payload);
             this._currentState = toState;
+            onChange && await onChange(eventName, fromState, toState, payload);
+            this._onLeave && await this._onLeave(eventName, fromState, toState, payload)
+
             return this;
         };
 
@@ -60,6 +81,8 @@ export class StateMachine {
                     && this._eventsByState[this._currentState][eventName]) {
                     return this._eventsByState[this._currentState][eventName](payload);
                 }
+
+                console.log(this._eventsByState, this._currentState, eventName)
             }
         }
     }
