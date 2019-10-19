@@ -2,6 +2,8 @@
 
 Simple finite state machine
 
+[![Build Status](https://travis-ci.com/icetemple/npm-it-fsm.svg?branch=master)](https://travis-ci.com/icetemple/npm-it-fsm)
+
 
 ### Installation
 
