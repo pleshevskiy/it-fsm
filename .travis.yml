@@ -1,0 +1,16 @@
+sudo: false
+language: node_js
+node_js:
+  # LTS
+  - "8"
+  - "10"
+  - "node"
+before_install:
+  - npm install -g npm
+install:
+  - npm install
+script:
+  - npm test
+after_success:
+  - npm run report-coverage
+

@@ -90,6 +90,3 @@ tags
 # build artifacts
 src/**/*.js
 src/**/*.d.ts
-
-# in development
-.travis*
