@@ -3,6 +3,7 @@
 Simple finite state machine
 
 [![Build Status](https://travis-ci.com/icetemple/npm-it-fsm.svg?branch=master)](https://travis-ci.com/icetemple/npm-it-fsm)
+[![Coverage Status](https://coveralls.io/repos/github/icetemple/npm-it-fsm/badge.svg?branch=master)](https://coveralls.io/github/icetemple/npm-it-fsm?branch=master)
 
 
 ### Installation
