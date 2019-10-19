@@ -1,16 +1,16 @@
-
+import cloneDeep from 'lodash.clonedeep';
 
 export type Payload = Record<string, any>
 export type StateType = string | number
 export type ActionConfigMap = Record<string, StateType | IActionConfig>
-export type ActionEvent = (event: string, fromState: string, toState: string,
+export type ActionEvent = (event: string, fromState: StateType, toState: StateType,
                            payload: Payload) => Promise<any>
 
 
 export interface IConfig {
-    [key: string]: ActionEvent | ActionConfigMap
-    onEnter: ActionEvent
-    onLeave: ActionEvent
+    [key: string]: undefined | ActionEvent | ActionConfigMap
+    onEnter?: ActionEvent
+    onLeave?: ActionEvent
 }
 
 export interface IActionConfig {
@@ -23,54 +23,58 @@ export interface IActionConfig {
 export class StateMachine {
     [key: string]: any;
 
-    private _currentState: string;
-    private _onEnter: ActionEvent;
-    private _onLeave: ActionEvent;
+    private _currentState: StateType;
+    private _onEnter?: ActionEvent;
+    private _onLeave?: ActionEvent;
     private _eventsByState: Record<string, Record<string, (payload: Payload) => any>> = {};
-    private _statesByState: Record<string, string[]> = {};
+    private _statesByState: Record<string, StateType[]> = {};
 
     constructor(initial: StateType, config: IConfig) {
-        this._currentState = initial.toString();
+        this._currentState = initial;
 
-        for (let fromState in config) {
-            if (['onEnter', 'onLeave'].includes(fromState)) {
+        for (let fromStateKey in config) {
+            if (['onEnter', 'onLeave'].includes(fromStateKey)) {
                 this._onEnter = config.onEnter;
                 continue
             }
 
-            this._statesByState[fromState] = [];
+            this._statesByState[fromStateKey] = [];
 
-            let actions = config[fromState] as ActionConfigMap;
+            let actions = config[fromStateKey] as ActionConfigMap;
             for (let actionName in actions) {
                 let action = actions[actionName];
                 let actionConfig: IActionConfig = action.constructor === Object ?
                     action as IActionConfig
                     : { state: action as StateType };
 
-                this._statesByState[fromState].push(actionConfig.state.toString());
-                this._initChangeState(actionName, fromState, actionConfig.state.toString(), actionConfig);
+                this._statesByState[fromStateKey].push(actionConfig.state);
+
+                let fromState: StateType = /^\d+$/.test(fromStateKey) ? parseInt(fromStateKey, 10) : fromStateKey;
+                this._initChangeState(actionName, fromState, actionConfig.state, actionConfig);
             }
         }
     }
 
-    private _initChangeState(eventName: string, fromState: string, toState: string, actionConfig: IActionConfig): void {
+
+    private _initChangeState(eventName: string, fromState: StateType, toState: StateType, actionConfig: IActionConfig): void {
         if (!this._eventsByState[fromState]) {
             this._eventsByState[fromState] = {};
         }
 
         const { onBeforeChange, onChange } = actionConfig;
-
-        this._eventsByState[fromState][eventName] = async (payload: Payload = {}) => {
-            console.log(this._currentState, typeof this._currentState, fromState, typeof fromState);
-            if (this._currentState !== fromState) {
-                return;
+        const _runEvent = async (method?: ActionEvent, payload: Payload = {}): Promise<void> => {
+            if (method) {
+                await method(eventName, fromState, toState, payload);
             }
+        };
 
-            this._onEnter && await this._onEnter(eventName, fromState, toState, payload);
-            onBeforeChange && await onBeforeChange(eventName, fromState, toState, payload);
+        this._eventsByState[fromState][eventName] = async (sourcePayload: Payload = {}) => {
+            const payload = cloneDeep(sourcePayload);
+            await _runEvent(this._onEnter, payload);
+            await _runEvent(onBeforeChange, payload);
             this._currentState = toState;
-            onChange && await onChange(eventName, fromState, toState, payload);
-            this._onLeave && await this._onLeave(eventName, fromState, toState, payload)
+            await _runEvent(onChange, payload);
+            await _runEvent(this._onLeave, payload);
 
             return this;
         };
@@ -81,13 +85,11 @@ export class StateMachine {
                     && this._eventsByState[this._currentState][eventName]) {
                     return this._eventsByState[this._currentState][eventName](payload);
                 }
-
-                console.log(this._eventsByState, this._currentState, eventName)
             }
         }
     }
 
-    public getCurrentState(): string {
+    public getCurrentState(): StateType {
         return this._currentState;
     }
 
@@ -100,7 +102,7 @@ export class StateMachine {
         return Object.keys(events).includes(eventName);
     }
 
-    public canToState(stateName: string) {
+    public canToState(stateName: StateType) {
         const states = this._statesByState[this._currentState];
         if (!states) {
             return false;

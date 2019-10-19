@@ -16,6 +16,7 @@
     "noImplicitThis": true,
     "noUnusedParameters": true,
     "strictNullChecks": true,
+    "esModuleInterop": true,
     "outDir": "./src"
   },
   "exclude": [
