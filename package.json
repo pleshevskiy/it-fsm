@@ -1,6 +1,6 @@
 {
   "name": "it-fsm",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Simple finite state machine for nodejs",
   "main": "./src/index.js",
   "types": "./src/index.d.ts",

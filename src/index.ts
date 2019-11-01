@@ -94,20 +94,18 @@ export class StateMachine {
     }
 
     public can(eventName: string): boolean {
-        const events = this._eventsByState[this._currentState];
-        if (!events) {
-            return false;
-        }
-
-        return Object.keys(events).includes(eventName);
+        return this.getAvailableActions().includes(eventName);
     }
 
     public canToState(stateName: StateType) {
-        const states = this._statesByState[this._currentState];
-        if (!states) {
-            return false;
-        }
+        return this.getAvailableStates().includes(stateName);
+    }
 
-        return states.includes(stateName);
+    public getAvailableStates(): StateType[] {
+        return this._statesByState[this._currentState] || []
+    }
+
+    public getAvailableActions(): string[] {
+        return Object.keys(this._eventsByState[this._currentState] || {});
     }
 }
