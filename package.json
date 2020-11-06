@@ -2,18 +2,15 @@
   "name": "it-fsm",
   "version": "1.0.7",
   "description": "Simple finite state machine for nodejs",
-  "main": "./src/index.js",
-  "types": "./src/index.d.ts",
+  "main": "./target/index.js",
+  "types": "./target/index.d.ts",
   "readme": "README.md",
   "files": [
-    "src",
-    "!*.spec.ts",
-    "!*.ts",
-    "*.d.ts"
+    "target"
   ],
   "scripts": {
     "test": "jest",
-    "prepublishOnly": "tsc",
+    "prepublishOnly": "rm -rf ./target && tsc",
     "report-coverage": "cat coverage/lcov.info | coveralls"
   },
   "repository": {

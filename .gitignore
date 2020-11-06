@@ -86,7 +86,7 @@ tags
 # IDE
 .idea/
 .c9/
+.vscode/
 
 # build artifacts
-src/**/*.js
-src/**/*.d.ts
+target/

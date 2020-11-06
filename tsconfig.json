@@ -15,13 +15,13 @@
     "noImplicitReturns": true,
     "noImplicitThis": true,
     "noUnusedParameters": true,
+    "strict": true,
     "strictNullChecks": true,
     "esModuleInterop": true,
-    "outDir": "./src"
+    "rootDir": "src",
+    "outDir": "target"
   },
-  "exclude": [
-    "node_modules",
-    "coverage",
-    "tests"
+  "include": [
+    "src"
   ]
 }
