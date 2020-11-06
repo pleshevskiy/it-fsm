@@ -4,6 +4,7 @@ node_js:
   # LTS
   - "8"
   - "10"
+  - "12"
   - "node"
 before_install:
   - npm install -g npm
