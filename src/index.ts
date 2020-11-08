@@ -8,15 +8,15 @@ export type ActionEvent = (event: string, fromState: StateType, toState: StateTy
 
 
 export interface IConfig {
-    [key: string]: undefined | ActionEvent | ActionConfigMap
-    onEnter?: ActionEvent
-    onLeave?: ActionEvent
+    [key: string]: undefined | ActionEvent | ActionConfigMap;
+    onEnter?: ActionEvent;
+    onLeave?: ActionEvent;
 }
 
 export interface IActionConfig {
-    state: StateType
-    onBeforeChange?: ActionEvent
-    onChange?: ActionEvent
+    state: StateType;
+    onBeforeChange?: ActionEvent;
+    onChange?: ActionEvent;
 }
 
 
@@ -26,8 +26,8 @@ export class StateMachine {
     private _currentState: StateType;
     private _onEnter?: ActionEvent;
     private _onLeave?: ActionEvent;
-    private _eventsByState: Record<string, Record<string, (payload: Payload) => any>> = {};
-    private _statesByState: Record<string, StateType[]> = {};
+    private _eventsByState = new Map<StateType, Record<string, (payload: Payload) => any>>();
+    private _statesByState = new Map<StateType, StateType[]>();
 
     constructor(initial: StateType, config: IConfig) {
         this._currentState = initial;
@@ -38,7 +38,11 @@ export class StateMachine {
                 continue
             }
 
-            this._statesByState[fromStateKey] = [];
+            const fromState: StateType = /^\d+$/.test(fromStateKey) ?
+                parseInt(fromStateKey, 10)
+                : fromStateKey;
+
+            const statesOfState: StateType[] = [];
 
             let actions = config[fromStateKey] as ActionConfigMap;
             for (let actionName in actions) {
@@ -47,9 +51,9 @@ export class StateMachine {
                     action as IActionConfig
                     : { state: action as StateType };
 
-                this._statesByState[fromStateKey].push(actionConfig.state);
+                statesOfState.push(actionConfig.state);
+                this._statesByState.set(fromState, statesOfState);
 
-                let fromState: StateType = /^\d+$/.test(fromStateKey) ? parseInt(fromStateKey, 10) : fromStateKey;
                 this._initChangeState(actionName, fromState, actionConfig.state, actionConfig);
             }
         }
@@ -57,10 +61,6 @@ export class StateMachine {
 
 
     private _initChangeState(eventName: string, fromState: StateType, toState: StateType, actionConfig: IActionConfig): void {
-        if (!this._eventsByState[fromState]) {
-            this._eventsByState[fromState] = {};
-        }
-
         const { onBeforeChange, onChange } = actionConfig;
         const _runEvent = async (method?: ActionEvent, payload: Payload = {}): Promise<void> => {
             if (method) {
@@ -68,7 +68,8 @@ export class StateMachine {
             }
         };
 
-        this._eventsByState[fromState][eventName] = async (sourcePayload: Payload = {}) => {
+        const events = this._eventsByState.get(fromState) ?? {};
+        events[eventName] = async (sourcePayload: Payload = {}) => {
             const payload = cloneDeep(sourcePayload);
             await _runEvent(this._onEnter, payload);
             await _runEvent(onBeforeChange, payload);
@@ -79,11 +80,13 @@ export class StateMachine {
             return this;
         };
 
+        this._eventsByState.set(fromState, events);
+
         if (!this[eventName]) {
             this[eventName] = async (payload: Payload = {}) => {
-                if (this._eventsByState[this._currentState]
-                    && this._eventsByState[this._currentState][eventName]) {
-                    return this._eventsByState[this._currentState][eventName](payload);
+                const events = this._eventsByState.get(this._currentState);
+                if (events && events[eventName]) {
+                    return events[eventName](payload);
                 }
             }
         }
@@ -102,10 +105,10 @@ export class StateMachine {
     }
 
     public getAvailableStates(): StateType[] {
-        return this._statesByState[this._currentState] || []
+        return this._statesByState.get(this._currentState) ?? []
     }
 
     public getAvailableActions(): string[] {
-        return Object.keys(this._eventsByState[this._currentState] || {});
+        return Object.keys(this._eventsByState.get(this._currentState) ?? {});
     }
 }
