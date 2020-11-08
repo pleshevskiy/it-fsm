@@ -129,6 +129,27 @@ describe('StateMachine', () => {
         objectStrFSM._currentState = StrStatus.PENDING;
     });
 
+    describe('::new', () => {
+        it('should init fsm model successfully', () => {
+
+            const simpleIntFSM = new StateMachine(IntStatus.PENDING, {
+                [IntStatus.PENDING]: {
+                    active: IntStatus.ACTIVE,
+                    delete: IntStatus.DELETED,
+                },
+                [IntStatus.ACTIVE]: {
+                    toDraft: IntStatus.PENDING,
+                    archive: IntStatus.ARCHIVED,
+                    doNothing: IntStatus.ACTIVE,
+                }
+            });
+
+            expect(simpleIntFSM).toBeDefined();
+            expect(simpleIntFSM.getCurrentState()).toBe(IntStatus.PENDING);
+
+        })
+    })
+
     describe('.getCurrentState', () => {
         describe('<IntStatus>', () => {
             it('should return initial int state for simple fsm model', () => {
