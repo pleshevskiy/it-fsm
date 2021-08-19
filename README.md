@@ -1,7 +1,7 @@
 # IT FSM
 
-[![Build Status](https://travis-ci.com/icetemple/npm-it-fsm.svg?branch=master)](https://travis-ci.com/icetemple/npm-it-fsm)
-[![Coverage Status](https://coveralls.io/repos/github/icetemple/npm-it-fsm/badge.svg?branch=master)](https://coveralls.io/github/icetemple/npm-it-fsm?branch=master)
+[![ci](https://github.com/icetemple/it-fsm/actions/workflows/ci.yml/badge.svg)](https://github.com/icetemple/it-fsm/actions/workflows/ci.yml)
+[![Coverage Status](https://coveralls.io/repos/github/icetemple/it-fsm/badge.svg?branch=master)](https://coveralls.io/github/icetemple/it-fsm?branch=master)
 
 Simple finite state machine
 
