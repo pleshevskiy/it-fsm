@@ -18,10 +18,9 @@
     "strict": true,
     "strictNullChecks": true,
     "esModuleInterop": true,
-    "rootDir": "src",
-    "outDir": "target"
+    "outDir": "dest"
   },
   "include": [
-    "src"
+    "fsm.ts"
   ]
 }
