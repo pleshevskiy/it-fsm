@@ -3,41 +3,44 @@ type StateTransitions<Context> = WeakMap<
   WeakSet<State<Context>>
 >;
 
+type StateName = string;
+type StateOrName<Context> = State<Context> | StateName;
+
 export const _states = Symbol("states");
 export const _stateTransitions = Symbol("state transitions");
 export const _prevState = Symbol("previous state");
 export const _currState = Symbol("current state");
 
 export class StateMachineBuilder<Context> {
-  [_states]: Map<string, Actions<Context>>;
+  [_states]: Map<StateName, Actions<Context>>;
 
-  [_stateTransitions]: Array<[string, Array<string>]> | undefined;
+  [_stateTransitions]: Array<[StateName, Array<StateName>]> | undefined;
 
   constructor() {
     this[_states] = new Map();
   }
 
-  withTransitions(transitions: Array<[string, Array<string>]>) {
+  withTransitions(transitions: Array<[StateName, Array<StateName>]>) {
     this[_stateTransitions] = transitions;
     return this;
   }
 
-  withStates(names: string[], actions?: Actions<Context>) {
+  withStates(names: StateName[], actions?: Actions<Context>) {
     names.forEach((name) => this.addStateUnchecked(name, actions));
     return this;
   }
 
-  withState(name: string, actions?: Actions<Context>) {
+  withState(name: StateName, actions?: Actions<Context>) {
     this.addStateUnchecked(name, actions);
     return this;
   }
 
-  private addStateUnchecked(name: string, actions?: Actions<Context>) {
+  private addStateUnchecked(name: StateName, actions?: Actions<Context>) {
     const oldActions = this[_states].get(name);
     return this[_states].set(name, { ...oldActions, ...actions });
   }
 
-  build(currentStateName: string) {
+  build(currentStateName: StateName) {
     const states = this.buildStates();
     const transitions = this.buildTransitions(states);
     const currState = validStateFromName(states, currentStateName);
@@ -81,9 +84,9 @@ export class StateMachine<Context> {
     this[_currState] = currentState;
   }
 
-  async changeState(sourceState: string | State<Context>, context?: Context) {
+  async changeState(sourceState: StateOrName<Context>, context?: Context) {
     const fromState = validState(this[_currState]);
-    const toState = validState(normalizeState(this[_states], sourceState));
+    const toState = validNormalizedState(this[_states], sourceState);
 
     if (
       !this.hasTransition(toState) ||
@@ -100,11 +103,11 @@ export class StateMachine<Context> {
     this[_prevState] = fromState;
   }
 
-  hasTransition(to: string | State<Context>) {
+  hasTransition(to: StateOrName<Context>) {
     return hasTransition(
       this[_stateTransitions],
       this[_currState],
-      validState(normalizeState(this[_states], to)),
+      validNormalizedState(this[_states], to),
     );
   }
 
@@ -123,25 +126,25 @@ interface Actions<Context> {
   beforeExit?(
     fromState: State<Context>,
     toState: State<Context>,
-    context: Context,
+    context?: Context,
   ): boolean;
   onEntry?(
     fromState: State<Context>,
     toState: State<Context>,
-    context: Context,
+    context?: Context,
   ): Promise<void> | void;
 }
 
 export class State<Context> {
   [_stateActions]: Actions<Context>;
 
-  [_stateName]: string;
+  [_stateName]: StateName;
 
-  get name(): string {
+  get name(): StateName {
     return this[_stateName];
   }
 
-  constructor(name: string, actions: Actions<Context> = {}) {
+  constructor(name: StateName, actions: Actions<Context> = {}) {
     this[_stateName] = name;
     this[_stateActions] = actions;
   }
@@ -149,7 +152,7 @@ export class State<Context> {
   async entry(
     fromState: State<Context>,
     toState: State<Context>,
-    context: Context,
+    context?: Context,
   ) {
     const action = this[_stateActions].onEntry;
     if (isFn(action)) {
@@ -171,19 +174,29 @@ export class State<Context> {
   }
 }
 
-function stateFromName<Context>(states: State<Context>[], name: string) {
-  return states.find((state) => state.name === name);
-}
-
-function validStateFromName<Context>(states: State<Context>[], name: string) {
-  return validState<Context>(stateFromName(states, name));
+function validNormalizedState<Context>(
+  states: State<Context>[],
+  state: StateOrName<Context>,
+) {
+  return validState<Context>(normalizeState(states, state));
 }
 
 function normalizeState<Context>(
   states: State<Context>[],
-  state: string | State<Context>,
+  state: StateOrName<Context>,
 ): State<Context> | undefined {
   return isStr(state) ? stateFromName(states, state) : state;
+}
+
+function validStateFromName<Context>(
+  states: State<Context>[],
+  name: StateName,
+) {
+  return validState<Context>(stateFromName(states, name));
+}
+
+function stateFromName<Context>(states: State<Context>[], name: StateName) {
+  return states.find((state) => state.name === name);
 }
 
 function validState<Context>(val: unknown): State<Context> {
