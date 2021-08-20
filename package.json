@@ -5,9 +5,6 @@
   "main": "./dest/fsm.js",
   "types": "./dest/fsm.d.ts",
   "readme": "README.md",
-  "files": [
-    "target"
-  ],
   "scripts": {
     "prepublishOnly": "rm -rf ./dest && tsc"
   },
