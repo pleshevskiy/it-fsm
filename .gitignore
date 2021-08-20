@@ -2,3 +2,5 @@ cov_profile/
 
 node_modules/
 package-lock.json
+
+dest/
