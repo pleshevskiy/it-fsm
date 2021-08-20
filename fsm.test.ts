@@ -83,15 +83,20 @@ Deno.test("should change state", async function () {
 });
 
 Deno.test("should trigger state actions", async function () {
+  const triggeredTimes = {
+    beforeExit: 0,
+    onEntry: 0,
+  };
+
   const sm = new fsm.StateMachineBuilder()
     .withStates(
       Object.values(ProjectStatus),
       {
-        onEntry(fromState, toState) {
-          console.log(`changing from ${fromState} to ${toState}`);
+        onEntry() {
+          triggeredTimes.onEntry += 1;
         },
-        beforeExit(fromState, toState) {
-          console.log(`before changing from ${fromState} to ${toState}`);
+        beforeExit() {
+          triggeredTimes.beforeExit += 1;
           return true;
         },
       },
@@ -104,12 +109,15 @@ Deno.test("should trigger state actions", async function () {
 
   const [, active, completed, archived] = sm[fsm._states];
 
+  assertEquals(triggeredTimes, { beforeExit: 0, onEntry: 0 });
   assertEquals(sm.allowedTransitionStates(), [active, archived]);
 
   await sm.changeState(ProjectStatus.Active);
+  assertEquals(triggeredTimes, { beforeExit: 1, onEntry: 1 });
   assertEquals(sm.allowedTransitionStates(), [completed]);
 
   await sm.changeState(ProjectStatus.Completed);
+  assertEquals(triggeredTimes, { beforeExit: 2, onEntry: 2 });
   assertEquals(sm.allowedTransitionStates(), []);
 });
 
