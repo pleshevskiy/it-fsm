@@ -160,3 +160,27 @@ Deno.test("should throw error if beforeExit action returns false", () => {
     `cannot change state from "${ProjectStatus.Pending}" to "${ProjectStatus.Active}"`,
   );
 });
+
+Deno.test("should reuse one builder for many entities", () => {
+  const statuses = Object.values(ProjectStatus);
+  const transitions: Array<[string, Array<string>]> = [
+    [ProjectStatus.Pending, [ProjectStatus.Active, ProjectStatus.Archived]],
+    [ProjectStatus.Active, [ProjectStatus.Completed]],
+  ];
+
+  const smb = new fsm.StateMachineBuilder()
+    .withStates(statuses)
+    .withTransitions(transitions);
+
+  function expectedAllowedStates(status: ProjectStatus) {
+    return transitions.find(([s]) => s === status)?.[1] || [];
+  }
+
+  for (const status of statuses) {
+    const sm = smb.build(status);
+    assertEquals(
+      sm.allowedTransitionStates().map(String),
+      expectedAllowedStates(status),
+    );
+  }
+});
