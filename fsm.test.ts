@@ -75,10 +75,10 @@ Deno.test("should change state", async function () {
 
   assertEquals(sm.allowedTransitionStates(), [active, archived]);
 
-  await sm.changeState(ProjectStatus.Active);
+  await sm.tryChangeState(ProjectStatus.Active, null);
   assertEquals(sm.allowedTransitionStates(), [completed]);
 
-  await sm.changeState(ProjectStatus.Completed);
+  await sm.tryChangeState(ProjectStatus.Completed, null);
   assertEquals(sm.allowedTransitionStates(), []);
 });
 
@@ -111,14 +111,20 @@ Deno.test("should trigger state actions", async function () {
 
   assertEquals(triggeredTimes, { beforeExit: 0, onEntry: 0 });
   assertEquals(sm.allowedTransitionStates(), [active, archived]);
+  assertEquals(
+    sm.allowedTransitionStateNames(),
+    [ProjectStatus.Active, ProjectStatus.Archived],
+  );
 
-  await sm.changeState(ProjectStatus.Active);
+  await sm.tryChangeState(ProjectStatus.Active, null);
   assertEquals(triggeredTimes, { beforeExit: 1, onEntry: 1 });
   assertEquals(sm.allowedTransitionStates(), [completed]);
+  assertEquals(sm.allowedTransitionStateNames(), [ProjectStatus.Completed]);
 
-  await sm.changeState(ProjectStatus.Completed);
+  await sm.tryChangeState(ProjectStatus.Completed, null);
   assertEquals(triggeredTimes, { beforeExit: 2, onEntry: 2 });
   assertEquals(sm.allowedTransitionStates(), []);
+  assertEquals(sm.allowedTransitionStateNames(), []);
 });
 
 Deno.test("should stringify state", function () {
@@ -146,9 +152,19 @@ Deno.test("should throw error if transition to the state doesn't exist", () => {
     .withStates(Object.values(ProjectStatus))
     .build(ProjectStatus.Pending);
   assertThrowsAsync(
-    () => sm.changeState(ProjectStatus.Active),
+    () => sm.tryChangeState(ProjectStatus.Active, null),
     fsm.FsmError,
     `cannot change state from "${ProjectStatus.Pending}" to "${ProjectStatus.Active}"`,
+  );
+});
+
+Deno.test("should return null if transition to the state doesn't exist", async () => {
+  const sm = new fsm.StateMachineBuilder()
+    .withStates(Object.values(ProjectStatus))
+    .build(ProjectStatus.Pending);
+  assertEquals(
+    await sm.maybeChangeState(ProjectStatus.Active, null),
+    null,
   );
 });
 
@@ -163,7 +179,7 @@ Deno.test("should throw error if beforeExit action returns false", () => {
     ])
     .build(ProjectStatus.Pending);
   assertThrowsAsync(
-    () => sm.changeState(ProjectStatus.Active),
+    () => sm.tryChangeState(ProjectStatus.Active, null),
     fsm.FsmError,
     `cannot change state from "${ProjectStatus.Pending}" to "${ProjectStatus.Active}"`,
   );
