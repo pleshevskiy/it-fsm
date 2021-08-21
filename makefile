@@ -1,16 +1,25 @@
 DENO := deno
+COV := $(DENO) coverage cov_profile
+FMT := $(DENO) fmt *.ts examples/*.ts
 
-tests: clean fmt-check
+dev: fmt tests cov
+
+ci: fmt-check tests-cov
+
+tests: clean
 	$(DENO) test --coverage=cov_profile *.test.ts
 
 tests-cov: tests
-	$(DENO) coverage cov_profile --lcov > cov_profile/cov.lcov
+	$(COV) --lcov > cov_profile/cov.lcov
+
+cov:
+	$(COV)
 
 fmt:
-	$(DENO) fmt *.ts
+	$(FMT)
 
 fmt-check:
-	$(DENO) fmt *.ts --check
+	$(FMT) --check
 
 clean:
 	rm -rf cov_profile

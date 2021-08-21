@@ -13,7 +13,7 @@ jobs:
       - uses: denolib/setup-deno@v2
         with:
           deno-version: v1.x
-      - run: make tests-cov
+      - run: make ci
       - name: Coveralls
         uses: coverallsapp/github-action@master
         with:
