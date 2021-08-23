@@ -208,3 +208,24 @@ Deno.test("should reuse one builder for many entities", () => {
     );
   }
 });
+
+Deno.test("should trigger builded transition actions", async () => {
+  const states = ["locked", "unlocked"] as const;
+  const [locked, unlocked] = states;
+
+  const sm = new fsm.StateMachineBuilder()
+    .withStates([locked, unlocked])
+    .withTransitions([
+      [locked, { coin: unlocked }],
+      [unlocked, { push: locked }],
+    ])
+    .build(locked);
+
+  const [lockedState, unlockedState] = sm[fsm._states];
+
+  assertEquals(await sm.trigger("coin", {}), unlockedState);
+  assertEquals(await sm.trigger("coin", {}), unlockedState);
+
+  assertEquals(await sm.trigger("push", {}), lockedState);
+  assertEquals(await sm.trigger("push", {}), lockedState);
+});

@@ -1,64 +1,104 @@
-type StateTransitions<Context, StateName extends string> = WeakMap<
-  State<Context, StateName>,
-  WeakSet<State<Context, StateName>>
+type StateTransitions<Ctx, SN extends string> = WeakMap<
+  State<Ctx, SN>,
+  WeakSet<State<Ctx, SN>>
 >;
 
-type StateOrName<Context, StateName extends string> =
-  | State<Context, StateName>
-  | StateName;
+type StateOrName<Ctx, SN extends string> =
+  | State<Ctx, SN>
+  | SN;
+
+type SourceTransitions<SN extends string> = Array<[SN, Array<SN>]>;
+type SourceNamedTransitions<SN extends string> = Array<
+  [SN, Record<string, SN>]
+>;
+type SourceActions<SN extends string> = Record<string, Array<[SN, SN]>>;
 
 export const _states = Symbol("states");
-export const _stateTransitions = Symbol("state transitions");
-export const _prevState = Symbol("previous state");
-export const _currState = Symbol("current state");
+const _transitions = Symbol("transitions");
+const _actions = Symbol("actions");
+const _prevState = Symbol("previous state");
+const _currState = Symbol("current state");
 
-export class StateMachineBuilder<Context, StateName extends string = string> {
-  [_states]: Map<StateName, Events<Context, StateName>>;
+export class StateMachineBuilder<Ctx, SN extends string = string> {
+  [_states]: Map<SN, Events<Ctx, SN>>;
 
-  [_stateTransitions]: Array<[StateName, Array<StateName>]> | undefined;
+  [_transitions]: SourceTransitions<SN> | undefined;
+
+  [_actions]: SourceActions<SN> | undefined;
 
   constructor() {
     this[_states] = new Map();
   }
 
-  withTransitions(transitions: Array<[StateName, Array<StateName>]>) {
-    this[_stateTransitions] = transitions;
+  withTransitions(
+    sourceTransitions: SourceTransitions<SN> | SourceNamedTransitions<SN>,
+  ) {
+    const [t, a] =
+      (sourceTransitions as Array<[SN, Array<SN> | Record<string, SN>]>)
+        .reduce(
+          ([transitions, actions], [fromState, sources]) => {
+            const toStates = Array.isArray(sources)
+              ? sources
+              : Object.values(sources);
+            transitions.push([fromState, toStates]);
+
+            if (!Array.isArray(sources)) {
+              Object.entries(sources).forEach(([actionName, toState]) => {
+                const actionTransitions = actions[actionName] || [];
+                actions[actionName] = [
+                  ...actionTransitions,
+                  [fromState, toState],
+                ];
+              });
+            }
+
+            return [transitions, actions];
+          },
+          [[], {}] as [SourceTransitions<SN>, SourceActions<SN>],
+        );
+
+    this[_transitions] = t;
+    this[_actions] = a;
     return this;
   }
 
-  withStates(names: StateName[], actions?: Events<Context, StateName>) {
+  withStates(names: SN[], actions?: Events<Ctx, SN>) {
     names.forEach((name) => this.addStateUnchecked(name, actions));
     return this;
   }
 
-  withState(name: StateName, actions?: Events<Context, StateName>) {
+  withState(name: SN, actions?: Events<Ctx, SN>) {
     this.addStateUnchecked(name, actions);
     return this;
   }
 
   private addStateUnchecked(
-    name: StateName,
-    actions?: Events<Context, StateName>,
+    name: SN,
+    actions?: Events<Ctx, SN>,
   ) {
     const oldActions = this[_states].get(name);
     return this[_states].set(name, { ...oldActions, ...actions });
   }
 
-  build(currentStateName: StateName) {
+  build(currentStateName: SN) {
     const states = this.buildStates();
     const transitions = this.buildTransitions(states);
+    const actions = this.buildActions(states);
     const currState = validStateFromName(states, currentStateName);
-    return new StateMachine<Context, StateName>(states, transitions, currState);
+    return new StateMachine<Ctx, SN>(currState, states, {
+      transitions,
+      actions,
+    });
   }
 
   private buildStates() {
-    return Array.from(this[_states].entries()).map((params) =>
-      new State(...params)
-    );
+    return Array.from(this[_states].entries())
+      .map((params) => new State(...params));
   }
 
-  private buildTransitions(states: State<Context, StateName>[]) {
-    const sourceTransitions = this[_stateTransitions] || [];
+  private buildTransitions(states: State<Ctx, SN>[]) {
+    const sourceTransitions = this[_transitions];
+    if (!sourceTransitions) return undefined;
 
     return new WeakMap(
       sourceTransitions.map(([from, toStates]) => [
@@ -67,32 +107,63 @@ export class StateMachineBuilder<Context, StateName extends string = string> {
       ]),
     );
   }
+
+  private buildActions(states: State<Ctx, SN>[]): Actions<Ctx, SN> | undefined {
+    const actions = this[_actions];
+    if (!actions) return undefined;
+    return new Map(
+      Object.entries(actions).map(([actionName, variants]) => [
+        actionName,
+        variants.map(([fromState, toState]) => [
+          validStateFromName(states, fromState),
+          validStateFromName(states, toState),
+        ]),
+      ]),
+    );
+  }
 }
 
-export class StateMachine<Context, StateName extends string = string> {
-  [_states]: State<Context, StateName>[];
+interface StateMachineOpts<Ctx, SN extends string> {
+  transitions?: StateTransitions<Ctx, SN>;
+  actions?: Actions<Ctx, SN>;
+}
 
-  [_stateTransitions]: StateTransitions<Context, StateName>;
+type Actions<Ctx, SN extends string> = Map<
+  string,
+  Array<[State<Ctx, SN>, State<Ctx, SN>]>
+>;
 
-  [_prevState]: State<Context, StateName> | undefined;
+export class StateMachine<Ctx, SN extends string = string> {
+  [_states]: State<Ctx, SN>[];
 
-  [_currState]: State<Context, StateName>;
+  [_transitions]: StateTransitions<Ctx, SN>;
+
+  [_actions]: Actions<Ctx, SN>;
+
+  [_prevState]: State<Ctx, SN> | undefined;
+
+  [_currState]: State<Ctx, SN>;
+
+  get currentState() {
+    return this[_currState];
+  }
 
   constructor(
-    states: State<Context, StateName>[],
-    transitions: StateTransitions<Context, StateName>,
-    currentState: State<Context, StateName>,
+    currentState: State<Ctx, SN>,
+    states: State<Ctx, SN>[],
+    { transitions, actions }: StateMachineOpts<Ctx, SN>,
   ) {
-    this[_states] = states;
-    this[_stateTransitions] = transitions;
     this[_currState] = currentState;
+    this[_states] = states;
+    this[_transitions] = transitions || new Map();
+    this[_actions] = actions || new Map();
   }
 
   async tryChangeState(
-    state: StateOrName<Context, StateName>,
-    context: Context,
+    state: StateOrName<Ctx, SN>,
+    context: Ctx,
   ) {
-    const fromState = validState<Context, StateName>(this[_currState]);
+    const fromState = validState<Ctx, SN>(this.currentState);
     const toState = validNormalizedState(this[_states], state);
 
     if (
@@ -112,64 +183,76 @@ export class StateMachine<Context, StateName extends string = string> {
     return this[_currState];
   }
 
-  maybeChangeState(state: StateOrName<Context, StateName>, context: Context) {
+  maybeChangeState(state: StateOrName<Ctx, SN>, context: Ctx) {
     return this.tryChangeState(state, context).catch(() => null);
   }
 
-  hasTransition(to: StateOrName<Context, StateName>) {
+  hasTransition(to: StateOrName<Ctx, SN>) {
     return hasTransition(
-      this[_stateTransitions],
+      this[_transitions],
       this[_currState],
       validNormalizedState(this[_states], to),
     );
   }
 
   allowedTransitionStates() {
-    const fromState = validState(this[_currState]);
     return this[_states].filter(
-      hasTransition.bind(null, this[_stateTransitions], fromState),
+      hasTransition.bind(null, this[_transitions], this[_currState]),
     );
   }
 
   allowedTransitionStateNames() {
     return this.allowedTransitionStates().map(String);
   }
+
+  trigger(actionName: string, context: Ctx) {
+    const currState = this[_currState];
+
+    const variants = this[_actions]?.get(actionName);
+    if (!variants) return currState;
+
+    const [, toState] =
+      variants.find(([fromState]) => fromState === currState) || [];
+    if (!toState) return currState;
+
+    return this.tryChangeState(toState, context);
+  }
 }
 
 const _stateName = Symbol("state name");
 const _stateEvents = Symbol("state events");
 
-interface Events<Context, StateName extends string> {
+interface Events<Ctx, SN extends string> {
   beforeExit?(
-    fromState: State<Context, StateName>,
-    toState: State<Context, StateName>,
-    context: Context,
+    fromState: State<Ctx, SN>,
+    toState: State<Ctx, SN>,
+    context: Ctx,
   ): boolean;
   onEntry?(
-    fromState: State<Context, StateName>,
-    toState: State<Context, StateName>,
-    context: Context,
+    fromState: State<Ctx, SN>,
+    toState: State<Ctx, SN>,
+    context: Ctx,
   ): Promise<void> | void;
 }
 
-export class State<Context, StateName extends string = string> {
-  [_stateEvents]: Events<Context, StateName>;
+export class State<Ctx, SN extends string = string> {
+  [_stateEvents]: Events<Ctx, SN>;
 
-  [_stateName]: StateName;
+  [_stateName]: SN;
 
-  get name(): StateName {
+  get name(): SN {
     return this[_stateName];
   }
 
-  constructor(name: StateName, events: Events<Context, StateName> = {}) {
+  constructor(name: SN, events: Events<Ctx, SN> = {}) {
     this[_stateName] = name;
     this[_stateEvents] = events;
   }
 
   async entry(
-    fromState: State<Context, StateName>,
-    toState: State<Context, StateName>,
-    context: Context,
+    fromState: State<Ctx, SN>,
+    toState: State<Ctx, SN>,
+    context: Ctx,
   ) {
     const event = this[_stateEvents].onEntry;
     if (isFn(event)) {
@@ -177,11 +260,7 @@ export class State<Context, StateName extends string = string> {
     }
   }
 
-  exit(
-    fromState: State<Context, StateName>,
-    toState: State<Context, StateName>,
-    context: Context,
-  ) {
+  exit(fromState: State<Ctx, SN>, toState: State<Ctx, SN>, context: Ctx) {
     const event = this[_stateEvents].beforeExit;
     return isFn(event) ? event(fromState, toState, context) : true;
   }
@@ -195,53 +274,49 @@ export class State<Context, StateName extends string = string> {
   }
 }
 
-function validNormalizedState<Context, StateName extends string>(
-  states: State<Context, StateName>[],
-  state: StateOrName<Context, StateName>,
+function validNormalizedState<Ctx, SN extends string>(
+  states: State<Ctx, SN>[],
+  state: StateOrName<Ctx, SN>,
 ) {
-  return validState<Context, StateName>(normalizeState(states, state));
+  return validState<Ctx, SN>(normalizeState(states, state));
 }
 
-function normalizeState<Context, StateName extends string>(
-  states: State<Context, StateName>[],
-  state: StateOrName<Context, StateName>,
-): State<Context, StateName> | undefined {
+function normalizeState<Ctx, SN extends string>(
+  states: State<Ctx, SN>[],
+  state: StateOrName<Ctx, SN>,
+): State<Ctx, SN> | undefined {
   return isStr(state) ? stateFromName(states, state) : state;
 }
 
-function validStateFromName<Context, StateName extends string>(
-  states: State<Context, StateName>[],
-  name: StateName,
+function validStateFromName<Ctx, SN extends string>(
+  states: State<Ctx, SN>[],
+  name: SN,
 ) {
-  return validState<Context, StateName>(stateFromName(states, name));
+  return validState<Ctx, SN>(stateFromName(states, name));
 }
 
-function stateFromName<Context, StateName extends string>(
-  states: State<Context, StateName>[],
-  name: StateName,
+function stateFromName<Ctx, SN extends string>(
+  states: State<Ctx, SN>[],
+  name: SN,
 ) {
   return states.find((state) => state.name === name);
 }
 
-function validState<Context, StateName extends string>(
-  val: unknown,
-): State<Context, StateName> {
-  if (!isState<Context, StateName>(val)) {
+function validState<Ctx, SN extends string>(val: unknown): State<Ctx, SN> {
+  if (!isState<Ctx, SN>(val)) {
     throw new TypeError("an instance of State class is expected");
   }
   return val;
 }
 
-function isState<Context, StateName extends string>(
-  val: unknown,
-): val is State<Context, StateName> {
+function isState<Ctx, SN extends string>(val: unknown): val is State<Ctx, SN> {
   return val instanceof State;
 }
 
-function hasTransition<Context, StateName extends string>(
-  transitions: StateTransitions<Context, StateName>,
-  from: State<Context, StateName>,
-  to: State<Context, StateName>,
+function hasTransition<Ctx, SN extends string>(
+  transitions: StateTransitions<Ctx, SN>,
+  from: State<Ctx, SN>,
+  to: State<Ctx, SN>,
 ) {
   return transitions.get(from)?.has(to) || false;
 }
