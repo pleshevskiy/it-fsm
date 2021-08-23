@@ -1,23 +1,23 @@
-type StateTransitions<Ctx, SN extends string> = WeakMap<
+export type StateTransitions<Ctx, SN extends string> = WeakMap<
   State<Ctx, SN>,
   WeakSet<State<Ctx, SN>>
 >;
 
-type StateOrName<Ctx, SN extends string> =
+export type StateOrName<Ctx, SN extends string> =
   | State<Ctx, SN>
   | SN;
 
-type SourceTransitions<SN extends string> = Array<[SN, Array<SN>]>;
-type SourceNamedTransitions<SN extends string> = Array<
+export type SourceTransitions<SN extends string> = Array<[SN, Array<SN>]>;
+export type SourceNamedTransitions<SN extends string> = Array<
   [SN, Record<string, SN>]
 >;
-type SourceActions<SN extends string> = Record<string, Array<[SN, SN]>>;
+export type SourceActions<SN extends string> = Record<string, Array<[SN, SN]>>;
 
 export const _states = Symbol("states");
-const _transitions = Symbol("transitions");
-const _actions = Symbol("actions");
-const _prevState = Symbol("previous state");
-const _currState = Symbol("current state");
+export const _transitions = Symbol("transitions");
+export const _actions = Symbol("actions");
+export const _prevState = Symbol("previous state");
+export const _currState = Symbol("current state");
 
 export class StateMachineBuilder<Ctx, SN extends string = string> {
   [_states]: Map<SN, Events<Ctx, SN>>;
@@ -123,12 +123,12 @@ export class StateMachineBuilder<Ctx, SN extends string = string> {
   }
 }
 
-interface StateMachineOpts<Ctx, SN extends string> {
+export interface StateMachineOpts<Ctx, SN extends string> {
   transitions?: StateTransitions<Ctx, SN>;
   actions?: Actions<Ctx, SN>;
 }
 
-type Actions<Ctx, SN extends string> = Map<
+export type Actions<Ctx, SN extends string> = Map<
   string,
   Array<[State<Ctx, SN>, State<Ctx, SN>]>
 >;
@@ -219,10 +219,10 @@ export class StateMachine<Ctx, SN extends string = string> {
   }
 }
 
-const _stateName = Symbol("state name");
-const _stateEvents = Symbol("state events");
+export const _stateName = Symbol("state name");
+export const _stateEvents = Symbol("state events");
 
-interface Events<Ctx, SN extends string> {
+export interface Events<Ctx, SN extends string> {
   beforeExit?(
     fromState: State<Ctx, SN>,
     toState: State<Ctx, SN>,
@@ -274,42 +274,46 @@ export class State<Ctx, SN extends string = string> {
   }
 }
 
-function validNormalizedState<Ctx, SN extends string>(
+export function validNormalizedState<Ctx, SN extends string>(
   states: State<Ctx, SN>[],
   state: StateOrName<Ctx, SN>,
 ) {
   return validState<Ctx, SN>(normalizeState(states, state));
 }
 
-function normalizeState<Ctx, SN extends string>(
+export function normalizeState<Ctx, SN extends string>(
   states: State<Ctx, SN>[],
   state: StateOrName<Ctx, SN>,
 ): State<Ctx, SN> | undefined {
   return isStr(state) ? stateFromName(states, state) : state;
 }
 
-function validStateFromName<Ctx, SN extends string>(
+export function validStateFromName<Ctx, SN extends string>(
   states: State<Ctx, SN>[],
   name: SN,
 ) {
   return validState<Ctx, SN>(stateFromName(states, name));
 }
 
-function stateFromName<Ctx, SN extends string>(
+export function stateFromName<Ctx, SN extends string>(
   states: State<Ctx, SN>[],
   name: SN,
 ) {
   return states.find((state) => state.name === name);
 }
 
-function validState<Ctx, SN extends string>(val: unknown): State<Ctx, SN> {
+export function validState<Ctx, SN extends string>(
+  val: unknown,
+): State<Ctx, SN> {
   if (!isState<Ctx, SN>(val)) {
     throw new TypeError("an instance of State class is expected");
   }
   return val;
 }
 
-function isState<Ctx, SN extends string>(val: unknown): val is State<Ctx, SN> {
+export function isState<Ctx, SN extends string>(
+  val: unknown,
+): val is State<Ctx, SN> {
   return val instanceof State;
 }
 
