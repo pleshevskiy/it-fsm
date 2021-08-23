@@ -13,16 +13,16 @@ async function main() {
   const sm = smbTurnstile.build(locked);
 
   function logCurrentState() {
-    console.log('current state', JSON.stringify(sm.currentState.name))
+    console.log("current state", JSON.stringify(sm.currentState.name));
   }
 
-  logCurrentState()
-  await sm.trigger('coin', {})
-  logCurrentState()
-  await sm.trigger('push', {})
-  logCurrentState()
-  await sm.trigger('push', {})
-  logCurrentState()
+  logCurrentState();
+  await sm.trigger("coin", {});
+  logCurrentState();
+  await sm.trigger("push", {});
+  logCurrentState();
+  await sm.trigger("push", {});
+  logCurrentState();
 }
 
 if (import.meta.main) {
