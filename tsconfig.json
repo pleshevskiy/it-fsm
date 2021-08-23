@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "allowJs": false,
-    "lib": ["es7"],
+    "lib": ["es2017"],
     "declaration": true,
     "module": "commonjs",
     "moduleResolution": "node",
