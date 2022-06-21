@@ -10,7 +10,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/icetemple/it-fsm.git"
+    "url": "git+https://git.pleshevski.ru/pleshevskiy/it-fsm.git"
   },
   "keywords": [
     "fsm",
@@ -22,11 +22,11 @@
     "oop"
   ],
   "author": "Dmitriy Pleshevskiy <dmitriy@ideascup.me>",
-  "license": "MIT",
+  "license": "GPL-3.0-or-later",
   "bugs": {
     "url": "https://github.com/icetemple/it-fsm/issues"
   },
-  "homepage": "https://github.com/icetemple/it-fsm#readme",
+  "homepage": "https://git.pleshevski.ru/pleshevskiy/it-fsm#readme",
   "devDependencies": {
     "typescript": "^4.3.5"
   }

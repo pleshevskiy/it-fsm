@@ -1,0 +1,6 @@
+{
+  "compilerOptions": {
+    "lib": ["es2017"]
+  },
+  "importMap": "./import_map.json"
+}
