@@ -1,6 +1,6 @@
 {
   "name": "it-fsm",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "Simple finite state machine for nodejs",
   "readme": "README.md",
   "scripts": {
@@ -40,5 +40,11 @@
   },
   "type": "module",
   "sideEffects": false,
-  "files": ["dist"]
+  "files": ["dist"],
+  "exports": {
+    ".": {
+      "require": "./dist/cjs/fsm.js",
+      "import": "./dist/esm/fsm.js"
+    }
+  }
 }
