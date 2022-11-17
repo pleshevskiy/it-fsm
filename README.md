@@ -30,21 +30,25 @@ You can find the full example in the [examples](./examples/) folder.
 
 # Installation
 
+## Deno
+
 if you use the [Deno](https://deno.land), just add following to your
 `import_map.json`
 
 ```json
 {
   "imports": {
-    "it-fsm": "https://git.pleshevski.ru/pleshevskiy/it-fsm/src/commit/c182728810e9fabcb6bb2b3091bbeabf439bef2d/fsm.ts"
+    "it-fsm": "https://git.pleshevski.ru/pleshevskiy/it-fsm/src/commit/e3796c92639e3483a2a2a01a89912561561e796f/fsm.ts"
   }
 }
 ```
 
-or you can use branch
+or you can use branch instead
 `https://git.pleshevski.ru/pleshevskiy/paren/raw/branch/main/`
 
-> **Note**: Use always a specific commit instead of branch
+> **Note**: I recommend to use a specific commit instead of branch
+
+## Node.js
 
 If you use the Node.js or in a browser as ES module, you may need to install it
 as follows, and additionally you can add import maps for client side.
