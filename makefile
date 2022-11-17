@@ -22,4 +22,4 @@ fmt-check:
 	$(FMT) --check
 
 clean:
-	rm -rf cov_profile
+	rm -rf cov_profile dist
