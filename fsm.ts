@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2019, Dmitriy Pleshevskiy <dmitriy@ideascup.me>
+ * Copyright (C) 2019, Dmitriy Pleshevskiy <dmitriy@pleshevski.ru>
  *
  * it-fsm is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
