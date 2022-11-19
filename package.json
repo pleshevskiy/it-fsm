@@ -4,10 +4,7 @@
   "description": "Simple finite state machine for nodejs",
   "readme": "README.md",
   "scripts": {
-    "build": "tsc && tsc -p tsconfig.cjs.json",
-    "check": "tsc --noEmit && tsc -p tsconfig.cjs.json --noEmit",
-    "clean": "rm -rf ./dist",
-    "prepublishOnly": "npm run clean && npm run build"
+    "prepublishOnly": "make build"
   },
   "repository": {
     "type": "git",
@@ -28,9 +25,6 @@
     "url": "https://github.com/pleshevskiy/it-fsm/issues"
   },
   "homepage": "https://git.pleshevski.ru/pleshevskiy/it-fsm#readme",
-  "devDependencies": {
-    "typescript": "^4.9.3"
-  },
   "main": "./dist/cjs/fsm.js",
   "module": "./dist/esm/fsm.js",
   "types": "./dist/esm/fsm.d.ts",
