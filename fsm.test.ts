@@ -17,9 +17,9 @@
 
 import {
   assertEquals,
+  assertRejects,
   assertThrows,
-  assertThrowsAsync,
-} from "https://deno.land/std@0.105.0/testing/asserts.ts";
+} from "https://deno.land/std@0.165.0/testing/asserts.ts";
 import * as fsm from "./fsm.ts";
 
 enum ProjectStatus {
@@ -168,7 +168,7 @@ Deno.test("should throw error if transition to the state doesn't exist", () => {
   const sm = new fsm.StateMachineBuilder()
     .withStates(Object.values(ProjectStatus))
     .build(ProjectStatus.Pending);
-  assertThrowsAsync(
+  assertRejects(
     () => sm.tryChangeState(ProjectStatus.Active, null),
     fsm.FsmError,
     `cannot change state from "${ProjectStatus.Pending}" to "${ProjectStatus.Active}"`,
@@ -195,7 +195,7 @@ Deno.test("should throw error if beforeExit action returns false", () => {
       [ProjectStatus.Pending, [ProjectStatus.Active]],
     ])
     .build(ProjectStatus.Pending);
-  assertThrowsAsync(
+  assertRejects(
     () => sm.tryChangeState(ProjectStatus.Active, null),
     fsm.FsmError,
     `cannot change state from "${ProjectStatus.Pending}" to "${ProjectStatus.Active}"`,
