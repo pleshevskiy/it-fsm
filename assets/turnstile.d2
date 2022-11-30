@@ -1,6 +1,18 @@
 direction: right
 
 Turnstile: {
-  Locked -> Unlocked: coin
-  Unlocked -> Locked: push
+  l: Locked {
+    shape: circle
+    style.fill: "#fd7373"
+  }
+  u: Unlocked {
+    shape: circle
+    style.fill: "#59c061"
+  }
+  
+  l -> l: push
+  u -> l: push
+
+  l -> u: coin
+  u -> u: coin
 }

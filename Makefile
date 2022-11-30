@@ -3,7 +3,7 @@ COV := $(DENO) coverage cov_profile
 FMT := $(DENO) fmt *.ts examples/*.ts
 NPM_PUB := npm publish
 
-D2 := nix run git+https://git.pleshevski.ru/mynix/tools\\\#d2_unstable --
+D2 := nix run git+https://git.pleshevski.ru/mynix/tools\\\#d2 --
 DIAGRAMS := \
 	turnstile
 
@@ -40,7 +40,7 @@ clean:
 	rm -rf assets/*.svg
 
 define d2rule
-d2_$(1)_args := $(D2) $$($(1)_theme_args) assets/$(1).d2 assets/$(1).svg
+$(1)_args := $(D2) $$($(1)_theme_args) assets/$(1).d2 assets/$(1).svg
 
 $(1): ; $$($(1)_args)
 $(1)-w: ; $$($(1)_args) -w
