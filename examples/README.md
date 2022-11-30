@@ -10,7 +10,7 @@ from passing through. Depositing a coin or token in a slot on the turnstile
 unlocks the arms, allowing a single customer to push through. After the customer
 passes through, the arms are locked again until another coin is inserted.
 
-![Turnstile diagram](https://git.pleshevski.ru/pleshevskiy/it-fsm/src/branch/main/assets/turnstile.svg)
+![Turnstile diagram](https://git.pleshevski.ru/pleshevskiy/it-fsm/raw/branch/main/assets/turnstile.svg)
 
 ```sh
 deno run ./examples/turnstile.ts
