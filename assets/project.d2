@@ -1,0 +1,26 @@
+direction: right
+
+Project: {
+  pen: Pending {
+    shape: circle
+  }
+  act: Active {
+    shape: circle
+    style.fill: "#9ae49a"
+  }
+  com: Completed {
+    shape: circle
+    style.fill: "#eaea7e"
+  }
+  arc: Archived {
+    shape: circle
+    style.fill: "#ff7e7e"
+  }
+
+  pen -> act: Activate
+  pen -> arc: Archive
+
+  act -> com: Complete
+
+  arc -> pen: Restore
+}

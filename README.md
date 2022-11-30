@@ -26,7 +26,7 @@ const sm = new StateMachineBuilder()
   .build(locked);
 ```
 
-You can find the full example in the [examples](./examples/) folder.
+You can find more examples [here](./examples/README.md)
 
 # Installation
 

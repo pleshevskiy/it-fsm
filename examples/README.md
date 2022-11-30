@@ -15,3 +15,13 @@ passes through, the arms are locked again until another coin is inserted.
 ```sh
 deno run ./examples/turnstile.ts
 ```
+
+## Project
+
+This is more complex example illustrate all features of this library
+
+![Project diagram](https://git.pleshevski.ru/pleshevskiy/it-fsm/raw/branch/main/assets/project.svg)
+
+```sh
+deno run ./examples/project.ts
+```

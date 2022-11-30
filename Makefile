@@ -5,7 +5,8 @@ NPM_PUB := npm publish
 
 D2 := nix run git+https://git.pleshevski.ru/mynix/tools\\\#d2 --
 DIAGRAMS := \
-	turnstile
+	turnstile \
+	project
 
 turnstile_theme_args := --layout elk --theme 101
 
