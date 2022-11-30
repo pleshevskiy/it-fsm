@@ -35,6 +35,7 @@ const smbProject = new StateMachineBuilder<
   .withTransitions([
     [ProjectStatus.Pending, [ProjectStatus.Active, ProjectStatus.Archived]],
     [ProjectStatus.Active, [ProjectStatus.Completed]],
+    [ProjectStatus.Archived, [ProjectStatus.Pending]],
   ]);
 
 async function main() {
