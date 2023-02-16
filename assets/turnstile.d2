@@ -1,15 +1,23 @@
+# port: 43334
+# layout: elk
+# theme: 101
+# pad: 0
+# sketch: true
+
 direction: right
 
 Turnstile: {
   l: Locked {
     shape: circle
     style.fill: "#fd7373"
+    width: 110
   }
   u: Unlocked {
     shape: circle
     style.fill: "#59c061"
+    width: 110
   }
-  
+
   l -> l: push
   u -> l: push
 

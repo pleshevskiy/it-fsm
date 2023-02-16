@@ -3,12 +3,10 @@ COV := $(DENO) coverage cov_profile
 FMT := $(DENO) fmt *.ts examples/*.ts
 NPM_PUB := npm publish
 
-D2 := nix run git+https://git.pleshevski.ru/mynix/tools\\\#d2 --
+D2 := wd2
 DIAGRAMS := \
 	turnstile \
 	project
-
-turnstile_theme_args := --layout elk --theme 101
 
 dev: fmt tests cov
 

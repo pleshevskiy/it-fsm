@@ -1,20 +1,30 @@
+# port: 43333
+# layout: dagre
+# theme: 101
+# pad: 0
+# sketch: true
+
 direction: right
 
 Project: {
   pen: Pending {
     shape: circle
+    width: 110
   }
   act: Active {
     shape: circle
     style.fill: "#9ae49a"
+    width: 110
   }
   com: Completed {
     shape: circle
     style.fill: "#eaea7e"
+    width: 110
   }
   arc: Archived {
     shape: circle
     style.fill: "#ff7e7e"
+    width: 110
   }
 
   pen -> act: Activate
